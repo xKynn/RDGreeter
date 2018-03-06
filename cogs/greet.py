@@ -7,7 +7,7 @@ class Greet:
         self.bot = bot
 
     def is_admin(ctx):
-        return ctx.author.permissions.manage_guild
+        return ctx.author.guild_permissions.manage_guild
 
     @commands.command()
     @commands.check(is_admin)
@@ -30,21 +30,23 @@ class Greet:
                     return
                 elif msg == 'g/yes':
                     pass
-                db_clan = await greeterDB.add_clan(conn, clan.lower().title())
+                await greeterDB.add_clan(conn, clan.lower().title())
 
                 await ctx.send(f"Enter the invite link/code for clan **{clan.lower().title()}**.\nCancel with"
                                " `g/cancel`")
-                link = await self.bot.wait('message', check=check)
+                link = await self.bot.wait_for('message', check=check)
                 if link == 'g/cancel':
                     return
-                await greeterDB.edit_field(conn, 'invite', clan.lower().title(), link.strip('<>').split('/')[-1])
+                await greeterDB.edit_field(conn, 'invite', clan.lower().title(), link.content.strip('<>').split('/')[-1])
+                await link.add_reaction('✅')
 
                 await ctx.send("Type out your greeting message, use {USER} in your message wherever you want to use the"
                                "invitee's name.\nCancel with `g/cancel`")
-                greet = await self.bot.wait('message', check=check)
+                greet = await self.bot.wait_for('message', check=check)
                 if greet == 'g/cancel':
                     return
-                await greeterDB.edit_field(conn, 'message', clan.lower().title(), greet)
+                await greeterDB.edit_field(conn, 'message', clan.lower().title(), greet.content)
+                await greet.add_reaction('✅')
             else:
                 return await ctx.send(f"A clan with name **{clan.lower().title()}** already exists.\n"
                                       "Use `edit_invite` or `edit_message` instead.")
@@ -62,10 +64,11 @@ class Greet:
 
             await ctx.send("Type out your greeting message, use {USER} in your message wherever you want to use the"
                            "invitee's name.\nCancel with `g/cancel`")
-            greet = await self.bot.wait('message', check=check)
+            greet = await self.bot.wait_for('message', check=check)
             if greet == 'g/cancel':
                 return
-            await greeterDB.edit_field(conn, 'message', clan.lower().title(), greet)
+            await greeterDB.edit_field(conn, 'message', clan.lower().title(), greet.content)
+            await greet.add_reaction('✅')
 
     @commands.command()
     @commands.check(is_admin)
@@ -79,10 +82,11 @@ class Greet:
                 return await ctx.send(f"A clan with name **{clan.lower().title()}** was not found in the DB.\n")
 
             await ctx.send(f"Enter the invite link/code for clan **{clan.lower().title()}**.\nCancel with `g/cancel`")
-            link = await self.bot.wait('message', check=check)
+            link = await self.bot.wait_for('message', check=check)
             if link == 'g/cancel':
                 return
-            await greeterDB.edit_field(conn, 'invite', clan.lower().title(), link.strip('<>').split('/')[-1])
+            await greeterDB.edit_field(conn, 'invite', clan.lower().title(), link.content.strip('<>').split('/')[-1])
+            await link.add_reaction('✅')
             await self.bot.tally_invites()
 
 

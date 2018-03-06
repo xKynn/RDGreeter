@@ -28,13 +28,13 @@ class Greeter(commands.Bot):
         super().run(self.config['token'])
 
     async def tally_invites(self):
-        guild_invites = await self.get_guild(138067606119645184).invites()
+        guild_invites = await self.get_guild(383240599328784395).invites()
         clan_invites = {}
         async with self.conn_pool.acquire() as conn:
             clans = await conn.fetch('SELECT * from greeter')
         for clan in clans:
             for invite in guild_invites:
-                if invite.code == clan.invite:
+                if invite.code == clan['invite']:
                     clan_invites[invite.code] = invite.uses
                     break
         return clan_invites
@@ -54,14 +54,12 @@ class Greeter(commands.Bot):
         if clan_link is None:
             return
         async with self.conn_pool.acquire() as conn:
-            clan = await conn.fetchrow('SELECT * FROM greeters WHERE invite=$1', clan_link)
-        await member.send(clan.message.replace('{USER}', member.name))
+            clan = await conn.fetchrow('SELECT * FROM greeter WHERE invite=$1', clan_link)
+        await member.send(clan['message'].replace('{USER}', member.name))
 
     async def on_ready(self):
 
         self.conn_pool = await create_pool(database='greeter', user='postgres', password=self.config['db_pass'])
-
-        self.invites = await self.tally_invites()
 
         for ext in self.startup_ext:
             try:
@@ -75,3 +73,4 @@ class Greeter(commands.Bot):
               f'{self.user.name}\n'
               f'{self.user.id}\n'
               '--------------------------')
+        self.invites = await self.tally_invites()
