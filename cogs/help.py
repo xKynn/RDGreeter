@@ -17,8 +17,8 @@ class Help:
             return await ctx.invoke(self.cmd('help command'), cmd_name=command_name)
 
         em = discord.Embed(title='Help',
-                           description='Below is a list of command categories.\n'
-                                       f'To get help or more information on a specific category or command, use:\n'
+                           description='Below is a list of commands.\n'
+                                       f'To get help or more information on a specific command, use:\n'
                                        f'`{bot_prefix}help cmd|command <command name>` for a specific command.\n'
                                        f'`{bot_prefix}help <command name>` is also a shortcut for the above.',
                            color=self.color)
