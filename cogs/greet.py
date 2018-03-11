@@ -31,7 +31,7 @@ class Greet:
             return message.author.id == ctx.author.id and message.channel == ctx.channel
 
         await ctx.send("Type out your greeting message, use {USER} in your message wherever you want to use the"
-                       "invitee's name.\nCancel with `g/cancel`")
+                       "invitee's name and {SERVER} for the server's name.\nCancel with `g/cancel`")
         greet = await self.bot.wait_for('message', check=check)
         if greet == 'g/cancel':
             return
@@ -52,7 +52,7 @@ class Greet:
         await link.add_reaction('✅')
         self.bot.invites = await self.bot.tally_invites()
 
-    @commands.command(aliases=['add_clan'])
+    @commands.command(aliases=['add_clan', 'new'])
     @commands.check(is_admin)
     async def add_role(self, ctx, *, clan: str):
         """ Add a new role or invite source to the database. """
@@ -81,7 +81,7 @@ class Greet:
                 return await ctx.send(f"A role with name **{clan.lower().title()}** already exists.\n"
                                       "Use `edit_link` or `edit_message` instead.")
 
-    @commands.command()
+    @commands.command(aliases=['edit_msg'])
     @commands.check(is_admin)
     async def edit_message(self, ctx, *, clan: str):
         """ Edit the message for an existing role/source. """
@@ -99,9 +99,9 @@ class Greet:
                 return
             await self._edit_link(ctx, clan, conn)
 
-    @commands.command()
+    @commands.command(aliases=['delete_clan'])
     @commands.check(is_admin)
-    async def delete_clan(self, ctx, *, clan: str):
+    async def delete_role(self, ctx, *, clan: str):
         """ Delete an existing role/source from the databse. """
         def check(message):
             return message.author.id == ctx.author.id and message.channel == ctx.channel and \
@@ -119,7 +119,7 @@ class Greet:
                 await conn.execute('DELETE FROM greeter WHERE clan_name=$1', clan.lower().title())
             await conf.add_reaction('✅')
 
-    @commands.command()
+    @commands.command(aliases=['roles', 'clans'])
     @commands.check(is_admin)
     async def info(self, ctx):
         """ List the current sources/roles and their invite codes. """
@@ -133,7 +133,7 @@ class Greet:
         tbl.insert(1, tab.draw())
         await ctx.send('\n'.join(tbl))
 
-    @commands.command()
+    @commands.command(aliases=['test'])
     @commands.check(is_admin)
     async def preview(self, ctx, *, clan: str):
         """ Get DMed with the specified role/source's greet message. """
@@ -143,7 +143,8 @@ class Greet:
             await ctx.error()
             return await ctx.send(f"A role with name **{clan.lower().title()}** was not found in the DB.\n")
         try:
-            await ctx.author.send(db_clan['message'].replace('{USER}', ctx.author.name))
+            await ctx.author.send(db_clan['message'].replace('{USER}', ctx.author.name).replace(
+                '{SERVER}', self.bot.get_guild(383240599328784395).name))
         except discord.DiscordException:
             await ctx.error()
             await ctx.send("You have DMs from non-friends disabled!")

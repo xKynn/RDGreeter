@@ -38,7 +38,7 @@ class Help:
 
         # Handle no command found
         if cmd_obj is None:
-            return await ctx.error(f'Command {cmd_name} not found')
+            return await ctx.error()
 
         em = discord.Embed(title=cmd_obj.name, description=cmd_obj.short_doc, color=self.color)
 
@@ -46,7 +46,7 @@ class Help:
         if cmd_obj.aliases:
             em.add_field(name='Aliases', value='\n'.join([f'\u2022 {x}' for x in cmd_obj.aliases]))
         if cmd_obj.clean_params:
-            em.add_field(name='Parameters', value='\n'.join([f'\u2022 {x}' for x in cmd_obj.clean_params]))
+            em.add_field(name='Parameters', value='\n'.join([f'\u2022 {x}'.replace('clan', 'role') for x in cmd_obj.clean_params]))
 
         # Handle group commands
         if isinstance(cmd_obj, commands.core.Group):
@@ -57,7 +57,7 @@ class Help:
         # Add usage last
         em.add_field(name='Usage',
                      value=f'```{bot_prefix}\u200b{cmd_name} '
-                           f'{" ".join([f"<{x}>" for x in cmd_obj.clean_params])}```',
+                           f'{" ".join([f"<{x}>".replace("clan", "role") for x in cmd_obj.clean_params])}```',
                      inline=False)
 
         await ctx.send(embed=em)
