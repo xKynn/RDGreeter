@@ -16,7 +16,8 @@ class Greet:
             ctx.bot.loop.create_task(ctx.send("You need the `Manage Server` permission to use this command."))
         return perm
 
-    async def _clan_check(self, ctx, clan, conn):
+    @staticmethod
+    async def _clan_check(ctx, clan, conn):
         """ Common function called by all funcs to check if a role exists """
         db_clan = await greeterDB.fetch_clan(conn, clan.lower().title())
         if db_clan is None:
@@ -33,8 +34,8 @@ class Greet:
         await ctx.send("Type out your greeting message, use {USER} in your message wherever you want to use the"
                        "invitee's name and {SERVER} for the server's name.\nCancel with `g/cancel`")
         greet = await self.bot.wait_for('message', check=check)
-        if greet == 'g/cancel':
-            return
+        if greet.content == 'g/cancel':
+            return await greet.add_reaction('🗑')
         await greeterDB.edit_field(conn, 'message', clan.lower().title(), greet.content)
         await greet.add_reaction('✅')
 
@@ -46,8 +47,8 @@ class Greet:
 
         await ctx.send(f"Enter the invite link/code for role **{clan.lower().title()}**.\nCancel with `g/cancel`")
         link = await self.bot.wait_for('message', check=check)
-        if link == 'g/cancel':
-            return
+        if link.content == 'g/cancel':
+            return await link.add_reaction('🗑')
         await greeterDB.edit_field(conn, 'invite', clan.lower().title(), link.content.strip('<>').split('/')[-1])
         await link.add_reaction('✅')
         self.bot.invites = await self.bot.tally_invites()
@@ -70,8 +71,8 @@ class Greet:
                            message.content in ['g/no', 'g/yes']
 
                 msg = await self.bot.wait_for('message', check=name_check)
-                if msg == 'g/no':
-                    return
+                if msg.content == 'g/no':
+                    return await msg.add_reaction('🗑')
                 await greeterDB.add_clan(conn, clan.lower().title())
 
                 await self._edit_link(ctx, clan, conn)
@@ -113,8 +114,8 @@ class Greet:
             await ctx.send(f"Are you sure you want to delete **{clan.lower().title()}** from the DB?.\n"
                            "Reply with `g/yes` or `g/no`.")
             conf = await self.bot.wait_for('message', check=check)
-            if conf == 'g/no':
-                return
+            if conf.content == 'g/no':
+                return await conf.add_reaction('🗑')
             async with conn.transaction():
                 await conn.execute('DELETE FROM greeter WHERE clan_name=$1', clan.lower().title())
             await conf.add_reaction('✅')
