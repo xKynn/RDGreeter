@@ -17,15 +17,15 @@ class Greet:
         return perm
 
     async def _clan_check(self, ctx, clan, conn):
-        """ Common function called by all funcs to check if a clan exists """
+        """ Common function called by all funcs to check if a role exists """
         db_clan = await greeterDB.fetch_clan(conn, clan.lower().title())
         if db_clan is None:
             await ctx.error()
-            await ctx.send(f"A clan with name **{clan.lower().title()}** was not found in the DB.\n")
+            await ctx.send(f"A role with name **{clan.lower().title()}** was not found in the DB.\n")
         return bool(db_clan)
 
     async def _edit_message(self, ctx, clan, conn):
-        """ Common function called by edit_message and add_clan """
+        """ Common function called by edit_message and add_role """
 
         def check(message):
             return message.author.id == ctx.author.id and message.channel == ctx.channel
@@ -39,12 +39,12 @@ class Greet:
         await greet.add_reaction('✅')
 
     async def _edit_link(self, ctx, clan, conn):
-        """ Common function called by edit_link and add_clan """
+        """ Common function called by edit_link and add_role """
 
         def check(message):
             return message.author.id == ctx.author.id and message.channel == ctx.channel
 
-        await ctx.send(f"Enter the invite link/code for clan **{clan.lower().title()}**.\nCancel with `g/cancel`")
+        await ctx.send(f"Enter the invite link/code for role **{clan.lower().title()}**.\nCancel with `g/cancel`")
         link = await self.bot.wait_for('message', check=check)
         if link == 'g/cancel':
             return
@@ -52,16 +52,16 @@ class Greet:
         await link.add_reaction('✅')
         self.bot.invites = await self.bot.tally_invites()
 
-    @commands.command()
+    @commands.command(aliases=['add_clan'])
     @commands.check(is_admin)
-    async def add_clan(self, ctx, *, clan: str):
-        """ Add a new clan or invite source to the database. """
+    async def add_role(self, ctx, *, clan: str):
+        """ Add a new role or invite source to the database. """
         def check(message):
             return message.author.id == ctx.author.id and message.channel == ctx.channel
         async with self.bot.conn_pool.acquire() as conn:
             db_clan = await greeterDB.fetch_clan(conn, clan.lower().title())
             if db_clan is None:
-                await ctx.send(f"A clan with name **{clan.lower().title()}** was not found in the DB.\nWould you like"
+                await ctx.send(f"A role with name **{clan.lower().title()}** was not found in the DB.\nWould you like"
                                "to create an entry for it? You will have to provide an invite link and a greet messa"
                                "ge.\nReply with `g/yes` or `g/no`.")
 
@@ -78,13 +78,13 @@ class Greet:
                 await self._edit_message(ctx, clan, conn)
 
             else:
-                return await ctx.send(f"A clan with name **{clan.lower().title()}** already exists.\n"
+                return await ctx.send(f"A role with name **{clan.lower().title()}** already exists.\n"
                                       "Use `edit_link` or `edit_message` instead.")
 
     @commands.command()
     @commands.check(is_admin)
     async def edit_message(self, ctx, *, clan: str):
-        """ Edit the message for an existing clan/source. """
+        """ Edit the message for an existing role/source. """
         async with self.bot.conn_pool.acquire() as conn:
             if not await self._clan_check(ctx, clan, conn):
                 return
@@ -93,7 +93,7 @@ class Greet:
     @commands.command()
     @commands.check(is_admin)
     async def edit_link(self, ctx, *, clan: str):
-        """ Edit the invite link/code for an existing clan/source. """
+        """ Edit the invite link/code for an existing role/source. """
         async with self.bot.conn_pool.acquire() as conn:
             if not await self._clan_check(ctx, clan, conn):
                 return
@@ -102,7 +102,7 @@ class Greet:
     @commands.command()
     @commands.check(is_admin)
     async def delete_clan(self, ctx, *, clan: str):
-        """ Delete an existing clan/source from the databse. """
+        """ Delete an existing role/source from the databse. """
         def check(message):
             return message.author.id == ctx.author.id and message.channel == ctx.channel and \
                            message.content in ['g/no', 'g/yes']
@@ -122,12 +122,12 @@ class Greet:
     @commands.command()
     @commands.check(is_admin)
     async def info(self, ctx):
-        """ List the current sources/clans and their invite codes. """
+        """ List the current sources/roles and their invite codes. """
         async with self.bot.conn_pool.acquire() as conn:
             clans = await conn.fetch('SELECT * from greeter')
         tbl = ['```', '```']
         tab = texttable.Texttable()
-        tab.header(('Clans', 'Invites'))
+        tab.header(('Roles', 'Invites'))
         for clan in clans:
             tab.add_row((clan['clan_name'], clan['invite']))
         tbl.insert(1, tab.draw())
@@ -136,12 +136,12 @@ class Greet:
     @commands.command()
     @commands.check(is_admin)
     async def preview(self, ctx, *, clan: str):
-        """ Get DMed with the specified clan/source's greet message. """
+        """ Get DMed with the specified role/source's greet message. """
         async with self.bot.conn_pool.acquire() as conn:
             db_clan = await greeterDB.fetch_clan(conn, clan.lower().title())
         if db_clan is None:
             await ctx.error()
-            return await ctx.send(f"A clan with name **{clan.lower().title()}** was not found in the DB.\n")
+            return await ctx.send(f"A role with name **{clan.lower().title()}** was not found in the DB.\n")
         try:
             await ctx.author.send(db_clan['message'].replace('{USER}', ctx.author.name))
         except discord.DiscordException:
