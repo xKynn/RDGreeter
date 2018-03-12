@@ -56,7 +56,7 @@ class Greeter(commands.Bot):
             return
         async with self.conn_pool.acquire() as conn:
             clan = await conn.fetchrow('SELECT * FROM greeter WHERE invite=$1', clan_link)
-        await member.send(clan['message'].replace('{USER}', member.name).replace('{SERVER}', self.bot.get_guild(138067606119645184).name))
+        await member.send(clan['message'].replace('{USER}', member.name).replace('{SERVER}', self.get_guild(138067606119645184).name))
 
     async def on_ready(self):
 
