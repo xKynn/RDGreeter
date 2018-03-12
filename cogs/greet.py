@@ -145,7 +145,7 @@ class Greet:
             return await ctx.send(f"A role with name **{clan.lower().title()}** was not found in the DB.\n")
         try:
             await ctx.author.send(db_clan['message'].replace('{USER}', ctx.author.name).replace(
-                '{SERVER}', self.bot.get_guild(383240599328784395).name))
+                '{SERVER}', self.bot.get_guild(138067606119645184).name))
         except discord.DiscordException:
             await ctx.error()
             await ctx.send("You have DMs from non-friends disabled!")

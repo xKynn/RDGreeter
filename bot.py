@@ -29,7 +29,7 @@ class Greeter(commands.Bot):
 
     async def tally_invites(self):
         """ Returns the current uses for invite codes on the DB as a dict """
-        guild_invites = await self.get_guild(383240599328784395).invites()
+        guild_invites = await self.get_guild(138067606119645184).invites()
         clan_invites = {}
         async with self.conn_pool.acquire() as conn:
             clans = await conn.fetch('SELECT * from greeter')
