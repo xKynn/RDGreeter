@@ -1,5 +1,6 @@
 import json
 
+from asyncio import TimeoutError
 from asyncpg import create_pool
 from discord.ext import commands
 from pathlib import Path
@@ -27,36 +28,40 @@ class Greeter(commands.Bot):
     def run(self):
         super().run(self.config['token'])
 
-    async def tally_invites(self):
-        """ Returns the current uses for invite codes on the DB as a dict """
-        guild_invites = await self.get_guild(138067606119645184).invites()
-        clan_invites = {}
-        async with self.conn_pool.acquire() as conn:
-            clans = await conn.fetch('SELECT * from greeter')
-        for clan in clans:
-            for invite in guild_invites:
-                if invite.code == clan['invite']:
-                    clan_invites[invite.code] = invite.uses
-                    break
-        return clan_invites
-
     # Utilise custom context for error messaging etc.
     async def on_message(self, message):
         ctx = await self.get_context(message, cls=GreeterContext)
         await self.invoke(ctx)
 
     async def on_member_join(self, member):
-        current_invites = await self.tally_invites()
-        clan_link = None
-        for invite in self.invites:
-            if current_invites[invite] > self.invites[invite]:
-                clan_link = invite
+        def role_update_check(before, after):
+            if before.id != member.id:
+                return False
+            for role in after.roles:
+                print(role.name)
+            new_roles = set(after.roles).difference(set(before.roles))
+            for role in new_roles:
+                print(role.name)
+                if role.name.startswith('Royal Destiny'):
+                    return True
+            return False
+        try:
+            _, update = await self.wait_for('member_update', check=role_update_check, timeout=5)
+        except TimeoutError:
+            return
+        clan_name = None
+        for role in update.roles:
+            if role.name.startswith('Royal Destiny'):
+                clan_name = role.name
                 break
-        if clan_link is None:
+        if not clan_name:
             return
         async with self.conn_pool.acquire() as conn:
-            clan = await conn.fetchrow('SELECT * FROM greeter WHERE invite=$1', clan_link)
-        await member.send(clan['message'].replace('{USER}', member.name).replace('{SERVER}', self.get_guild(138067606119645184).name))
+            clan = await conn.fetchrow('SELECT * FROM greeter WHERE clan_name=$1', clan_name)
+        try:
+            await member.send(clan['message'].replace('{USER}', member.name))
+        except:
+            return
 
     async def on_ready(self):
 
@@ -74,4 +79,3 @@ class Greeter(commands.Bot):
               f'{self.user.name}\n'
               f'{self.user.id}\n'
               '--------------------------')
-        self.invites = await self.tally_invites()

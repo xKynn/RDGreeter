@@ -11,7 +11,6 @@ async def main():
                                  port=config['db_port'])
     await conn.execute('''CREATE TABLE greeter(
     clan_name text PRIMARY KEY,
-    invite text,
     message text
     );
     ''')

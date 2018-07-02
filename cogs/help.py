@@ -27,6 +27,7 @@ class Help:
 
         em.add_field(name='Commands', value='\n'.join([f'\u2022 `{bot_prefix}{x.name}` - {x.short_doc}'
                                                        for x in self.bot.get_cog_commands('Greet')]))
+        em.add_field(name='Github', value="[Read the code!](https://github.com/xKynn/RDGreeter)")
         await ctx.send(embed=em)
 
     @help.command(name='command', aliases=['cmd', 'commands'])
