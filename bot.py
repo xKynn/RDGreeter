@@ -37,12 +37,10 @@ class Greeter(commands.Bot):
         def role_update_check(before, after):
             if before.id != member.id:
                 return False
-            for role in after.roles:
-                print(role.name)
             new_roles = set(after.roles).difference(set(before.roles))
             for role in new_roles:
-                print(role.name)
-                if role.name.startswith('Royal Destiny'):
+                if role.name.startswith('Royal Destiny') or role.name.startswith('Guest'):
+                    print(role.name)
                     return True
             return False
         try:
@@ -51,7 +49,7 @@ class Greeter(commands.Bot):
             return
         clan_name = None
         for role in update.roles:
-            if role.name.startswith('Royal Destiny'):
+            if role.name.startswith('Royal Destiny') or role.name.startswith('Guest'):
                 clan_name = role.name
                 break
         if not clan_name:
