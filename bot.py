@@ -33,31 +33,21 @@ class Greeter(commands.Bot):
         ctx = await self.get_context(message, cls=GreeterContext)
         await self.invoke(ctx)
 
-    async def on_member_join(self, member):
-        def role_update_check(before, after):
-            if before.id != member.id:
-                return False
-            new_roles = set(after.roles).difference(set(before.roles))
-            for role in new_roles:
-                if role.name.startswith('Royal Destiny') or role.name.startswith('Guest'):
-                    print(role.name)
-                    return True
-            return False
-        try:
-            _, update = await self.wait_for('member_update', check=role_update_check, timeout=5)
-        except TimeoutError:
-            return
-        clan_name = None
-        for role in update.roles:
-            if role.name.startswith('Royal Destiny') or role.name.startswith('Guest'):
-                clan_name = role.name
-                break
-        if not clan_name:
-            return
+    async def on_member_update(self, before, after):
         async with self.conn_pool.acquire() as conn:
-            clan = await conn.fetchrow('SELECT * FROM greeter WHERE clan_name=$1', clan_name)
+            roles = await conn.fetch('SELECT clan_name from greeter')
+        roles = [role['clan_name'] for role in roles]
+        new_roles = set(after.roles).difference(set(before.roles))
+        added_role = None
+        for role in new_roles:
+            if role.name in roles:
+                added_role = role
+                break
+        if not added_role: return
+        async with self.conn_pool.acquire() as conn:
+            clan = await conn.fetchrow('SELECT * FROM greeter WHERE clan_name=$1', added_role.name)
         try:
-            await member.send(clan['message'].replace('{USER}', member.name))
+            await after.send(clan['message'].replace('{USER}', after.name))
         except:
             return
 
