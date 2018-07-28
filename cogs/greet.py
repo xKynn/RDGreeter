@@ -103,7 +103,7 @@ class Greet:
             clans = await conn.fetch('SELECT * from greeter')
         tbl = ['```', '```']
         tab = texttable.Texttable()
-        tab.header(('Roles'))
+        tab.header(('Roles', ))
         for clan in clans:
             tab.add_row((clan['clan_name'],))
         tbl.insert(1, tab.draw())
