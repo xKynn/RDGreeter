@@ -105,7 +105,7 @@ class Greet:
         tab = texttable.Texttable()
         tab.header(('Roles'))
         for clan in clans:
-            tab.add_row((clan['clan_name']))
+            tab.add_row((clan['clan_name'],))
         tbl.insert(1, tab.draw())
         await ctx.send('\n'.join(tbl))
 
